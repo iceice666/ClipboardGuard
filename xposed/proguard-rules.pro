@@ -1,21 +1,27 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+-keep class com.github.kyuubiran.ezxhelper.utils.** { *; }
+-keep class net.iceice666.clipboardblocker.xposed.XposedEntry { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+-dontwarn java.lang.invoke.StringConcatFactory
+-dontwarn android.content.res.XModuleResources
+-dontwarn android.content.res.XResources
+-dontwarn de.robv.android.xposed.IXposedHookLoadPackage
+-dontwarn de.robv.android.xposed.IXposedHookZygoteInit$StartupParam
+-dontwarn de.robv.android.xposed.IXposedHookZygoteInit
+-dontwarn de.robv.android.xposed.XC_MethodHook$MethodHookParam
+-dontwarn de.robv.android.xposed.XC_MethodHook$Unhook
+-dontwarn de.robv.android.xposed.XC_MethodHook
+-dontwarn de.robv.android.xposed.XC_MethodReplacement
+-dontwarn de.robv.android.xposed.XposedBridge
+-dontwarn de.robv.android.xposed.XposedHelpers
+-dontwarn de.robv.android.xposed.callbacks.XC_LoadPackage$LoadPackageParam
+-dontwarn org.bouncycastle.jsse.BCSSLParameters
+-dontwarn org.bouncycastle.jsse.BCSSLSocket
+-dontwarn org.bouncycastle.jsse.provider.BouncyCastleJsseProvider
+-dontwarn org.conscrypt.Conscrypt$Version
+-dontwarn org.conscrypt.Conscrypt
+-dontwarn org.conscrypt.ConscryptHostnameVerifier
+-dontwarn org.openjsse.javax.net.ssl.SSLParameters
+-dontwarn org.openjsse.javax.net.ssl.SSLSocket
+-dontwarn org.openjsse.net.ssl.OpenJSSE
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+#-adaptresourcefilenames
