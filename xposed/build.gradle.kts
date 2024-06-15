@@ -19,10 +19,11 @@ android {
 }
 
 dependencies {
-    compileOnly(libs.libxposed.api)
+
+    compileOnly(libs.de.robv.android.xposed.api)
 
 
-
+    implementation(libs.androidx.core.ktx)
     implementation(project(":common"))
 }
 

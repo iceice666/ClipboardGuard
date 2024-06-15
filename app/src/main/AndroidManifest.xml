@@ -10,7 +10,7 @@
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
-            android:theme="@style/Theme.ClipboardBlocker"
+            android:theme="@android:style/Theme.Material"
             tools:targetApi="31">
         <activity
                 android:name=".MainActivity"
@@ -23,6 +23,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <meta-data
+                android:name="xposedmodule"
+                android:value="true" />
+        <meta-data
+                android:name="xposeddescription"
+                android:value="@string/app_desc" />
+        <meta-data
+                android:name="xposedminversion"
+                android:value="82" />
+
 
     </application>
 

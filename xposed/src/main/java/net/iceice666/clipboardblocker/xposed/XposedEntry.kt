@@ -1,80 +1,85 @@
 package net.iceice666.clipboardblocker.xposed
 
-
-import android.annotation.SuppressLint
 import android.app.Application
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
-import io.github.libxposed.api.XposedInterface
-import io.github.libxposed.api.XposedInterface.AfterHookCallback
-import io.github.libxposed.api.XposedInterface.BeforeHookCallback
-import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
-import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
-import io.github.libxposed.api.annotations.AfterInvocation
-import io.github.libxposed.api.annotations.BeforeInvocation
-import io.github.libxposed.api.annotations.XposedHooker
-import java.io.FileNotFoundException
-import java.io.FileReader
-import kotlin.random.Random
+import de.robv.android.xposed.IXposedHookLoadPackage
+import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedHelpers
+import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
+import net.iceice666.clipboardblocker.common.PACKAGE_ID
 
-private lateinit var module: XposedEntry
 
-@Suppress("Unused")
-class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModule(base, param) {
+class XposedEntry : IXposedHookLoadPackage {
 
-    init {
-        log("ModuleMain at " + param.processName)
-        module = this
-    }
+    private lateinit var context: Context
 
-    @XposedHooker
-    class MyHooker(private val magic: Int) : XposedInterface.Hooker {
-        companion object {
-            @JvmStatic
-            @BeforeInvocation
-            fun beforeInvocation(callback: BeforeHookCallback): MyHooker {
-                val key = Random.nextInt()
-                val appContext = callback.args[0]
-                module.log("beforeInvocation: key = $key")
-                module.log("app context: $appContext")
-                return MyHooker(key)
+    override fun handleLoadPackage(lpparam: LoadPackageParam) {
+        if (lpparam.packageName == PACKAGE_ID) return
+
+        XposedHelpers.findAndHookMethod(
+            Application::class.java,
+            "attach",
+            Context::class.java,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    context = param.args[0] as Context
+                }
+            }
+        )
+
+        XposedHelpers.findAndHookMethod(
+            ClipboardManager::class.java,
+            "setPrimaryClip",
+            ClipData::class.java,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val clipData = param.args[0] as ClipData
+                    val text = clipData.getItemAt(0).text
+                    if (text == "") return
+
+                    val packageName = lpparam.packageName
+                    XposedBridge.log("$packageName: $text")
+                }
+
             }
 
-            @JvmStatic
-            @AfterInvocation
-            fun afterInvocation(callback: AfterHookCallback, context: MyHooker) {
-                module.log("afterInvocation: key = ${context.magic}")
+        )
+
+        XposedHelpers.findAndHookMethod(
+            ClipboardManager::class.java,
+
+            // "android.content.ClipboardManager",
+            // lpparam.classLoader,
+
+            "getPrimaryClip",
+
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val clipData = param.result as ClipData
+
+                    val item = clipData.getItemAt(0)
+
+                    if (item.intent != null) {
+                        XposedBridge.log("Get a intent, ignore")
+                    } else if (item.uri != null) {
+                        // TODO: implement filter
+                    } else if (item.text != null) {
+                        // TODO: implement filter
+                    } else XposedBridge.log("???")
+
+
+                }
+
             }
-        }
+        )
+
+
     }
 
-    @SuppressLint("DiscouragedPrivateApi")
-    override fun onPackageLoaded(param: PackageLoadedParam) {
-        super.onPackageLoaded(param)
-        log("onPackageLoaded: " + param.packageName)
-        log("param classloader is " + param.classLoader)
-        log("module apk path: " + this.applicationInfo.sourceDir)
-        log("----------")
-
-        if (!param.isFirstPackage) return
-
-        val prefs = getRemotePreferences("test")
-        log("remote prefs: " + prefs.getInt("test", -1))
-        prefs.registerOnSharedPreferenceChangeListener { _, key ->
-            val value = prefs.getInt(key, 0)
-            log("onSharedPreferenceChanged: $key->$value")
-        }
-
-        try {
-            val text = openRemoteFile("test.txt").use {
-                FileReader(it.fileDescriptor).readText()
-            }
-            log("remote file content: $text")
-        } catch (e: FileNotFoundException) {
-            log("remote file not found")
-        }
-
-        val exampleMethod = Application::class.java.getDeclaredMethod("attach", Context::class.java)
-        hook(exampleMethod, MyHooker::class.java)
-    }
 }
+

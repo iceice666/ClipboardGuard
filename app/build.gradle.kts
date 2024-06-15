@@ -23,12 +23,14 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.material)
+
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
 
-    implementation(libs.libxposed.service)
+    implementation(files("..\\libs\\xposed_service-release.jar"))
 
 
     implementation(project(":common"))

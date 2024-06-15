@@ -4,100 +4,83 @@ package net.iceice666.clipboardblocker
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.IBinder
+import android.os.RemoteException
+import android.util.Log
 import android.widget.Toast
-
+import io.github.xposed.xposedservice.IXposedService
+import io.github.xposed.xposedservice.models.Application
 import net.iceice666.clipboardblocker.databinding.ActivityMainBinding
 
-import io.github.libxposed.service.XposedService
-import io.github.libxposed.service.XposedService.OnScopeEventListener
-import io.github.libxposed.service.XposedServiceHelper
-
-import java.io.FileWriter
-import kotlin.random.Random
-
 class MainActivity : Activity() {
+    private var ser: IXposedService? = null
 
-    private var mService: XposedService? = null
-
-    private val mCallback = object : OnScopeEventListener {
-        override fun onScopeRequestPrompted(packageName: String) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestPrompted: $packageName", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        override fun onScopeRequestApproved(packageName: String) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestApproved: $packageName", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        override fun onScopeRequestDenied(packageName: String) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestDenied: $packageName", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        override fun onScopeRequestTimeout(packageName: String) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestTimeout: $packageName", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        override fun onScopeRequestFailed(packageName: String, message: String) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestFailed: $packageName, $message", Toast.LENGTH_SHORT).show()
-            }
-        }
+    companion object {
+        private const val TAG = "APIModuleTest"
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint("WrongConstant")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.binder.text = "Loading"
-        XposedServiceHelper.registerListener(object : XposedServiceHelper.OnServiceListener {
-            override fun onServiceBind(service: XposedService) {
-                mService = service
-                binding.binder.text = "Binder acquired"
-                binding.api.text = "API " + service.apiVersion
-                binding.framework.text = "Framework " + service.frameworkName
-                binding.frameworkVersion.text = "Framework version " + service.frameworkVersion
-                binding.frameworkVersionCode.text = "Framework version code " + service.frameworkVersionCode
-                binding.scope.text = "Scope: " + service.scope
+        val ibinder = getSystemService("LSPosed")
+        if (ibinder != null) ser = IXposedService.Stub.asInterface(ibinder as IBinder)
 
-                binding.requestScope.setOnClickListener {
-                    service.requestScope("com.android.settings", mCallback)
+        val listapp: ArrayList<Application> = ArrayList()
+
+        binding.switch1.setOnCheckedChangeListener { _, isChecked ->
+            Log.i(TAG, "switch1 $isChecked")
+            if (!isChecked) {
+                listapp.clear()
+                return@setOnCheckedChangeListener
+            }
+            val app = Application()
+            app.packageName = "com.discord"
+            app.userId = 0
+            listapp.add(app)
+            for (item in listapp) {
+                Log.i(TAG, item.packageName)
+            }
+        }
+
+        binding.button1.setOnClickListener {
+            if (ser == null) {
+
+                Toast.makeText(
+                    this,
+                    "ensure your module is enabled and you have installed mywalkb/LSPosed_mod",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@setOnClickListener
+            }
+            try {
+                Log.i(TAG, "getXposedVersionName " + ser!!.xposedVersionName)
+                Log.i(TAG, "getXposedApiVersion " + ser!!.xposedApiVersion)
+                Log.i(TAG, "getXposedVersionCode " + ser!!.xposedVersionCode)
+                Log.i(TAG, "getApi " + ser!!.api)
+                val lst: MutableList<Application> = ser!!.moduleScope
+                for (app in lst) {
+                    Log.i(TAG, ("getModulScope " + app.packageName) + " " + app.userId)
                 }
-                binding.randomPrefs.setOnClickListener {
-                    val prefs = service.getRemotePreferences("test")
-                    val old = prefs.getInt("test", -1)
-                    val new = Random.nextInt()
-                    Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
-                    prefs.edit().putInt("test", new).apply()
-                }
-                binding.remoteFile.setOnClickListener {
-                    service.openRemoteFile("test.txt").use { pfd ->
-                        FileWriter(pfd.fileDescriptor).use {
-                            it.append("Hello World!")
-                        }
-                    }
-                }
+            } catch (e: RemoteException) {
+                Log.e(TAG, "getSystemService RemoteException", e)
+                return@setOnClickListener
             }
 
-            override fun onServiceDied(service: XposedService) {
-            }
-        })
+        }
 
-        val handler = Handler(Looper.getMainLooper())
-        handler.postDelayed({
-            if (mService == null) {
-                binding.binder.text = "Binder is null"
+        binding.button2.setOnClickListener {
+            try {
+                ser!!.setModuleScope(listapp)
+            } catch (e: RemoteException) {
+                Log.e(TAG, "setModuleScope RemoteException", e)
             }
-        }, 5000)
+        }
+
+
     }
 }
