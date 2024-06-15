@@ -1,83 +1,100 @@
 package net.iceice666.clipboardblocker.activity
 
-
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
-
-import net.iceice666.clipboardblocker.databinding.ActivityMainBinding
-
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedService.OnScopeEventListener
 import io.github.libxposed.service.XposedServiceHelper
 import net.iceice666.clipboardblocker.LsposedServiceManager
+import net.iceice666.clipboardblocker.databinding.ActivityMainBinding
 
 class MainActivity : Activity() {
 
-    private var service: XposedService? = LsposedServiceManager.getInstance()
+    private val service: XposedService? = LsposedServiceManager.getInstance()
 
     private val mCallback = object : OnScopeEventListener {
         override fun onScopeRequestPrompted(packageName: String) {
             runOnUiThread {
-                Toast.makeText(
-                    this@MainActivity,
-                    "onScopeRequestPrompted: $packageName",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast("onScopeRequestPrompted: $packageName")
             }
         }
 
         override fun onScopeRequestApproved(packageName: String) {
             runOnUiThread {
-                Toast.makeText(
-                    this@MainActivity,
-                    "onScopeRequestApproved: $packageName",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast("onScopeRequestApproved: $packageName")
             }
-
         }
 
         override fun onScopeRequestDenied(packageName: String) {
             runOnUiThread {
-                Toast.makeText(
-                    this@MainActivity,
-                    "onScopeRequestDenied: $packageName",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast("onScopeRequestDenied: $packageName")
             }
         }
 
         override fun onScopeRequestTimeout(packageName: String) {
             runOnUiThread {
-                Toast.makeText(
-                    this@MainActivity,
-                    "onScopeRequestTimeout: $packageName",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast("onScopeRequestTimeout: $packageName")
             }
         }
 
         override fun onScopeRequestFailed(packageName: String, message: String) {
             runOnUiThread {
-                Toast.makeText(
-                    this@MainActivity,
-                    "onScopeRequestFailed: $packageName, $message",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast("onScopeRequestFailed: $packageName, $message")
             }
         }
     }
 
-    private fun refreshScope(binding: ActivityMainBinding, scope: MutableList<String>) {
-        var text = ""
-        for (app in scope) {
-            text += app + "\n"
+    private fun showToast(message: String) {
+        Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun refreshScope(binding: ActivityMainBinding, scope: List<String>) {
+        binding.scopeList.text = scope.joinToString("\n")
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun updateInfo(binding: ActivityMainBinding) {
+        service?.let { service ->
+            binding.binder.text = "Binder acquired"
+            binding.api.text = "API: ${service.apiVersion}"
+            binding.framworkInfo.text =
+                "${service.frameworkName} ${service.frameworkVersion} [code ${service.frameworkVersionCode}]"
+
+            refreshScope(binding, service.scope)
+
+            binding.requestScope.setOnClickListener {
+                val app = binding.scopeInput.text.toString().trim()
+                if (app.isEmpty()) {
+                    showToast("App name is empty")
+                    return@setOnClickListener
+                }
+                service.requestScope(app, mCallback)
+            }
+
+            binding.removeScope.setOnClickListener {
+                val app = binding.scopeInput.text.toString().trim()
+                if (app.isEmpty()) {
+                    showToast("App name is empty")
+                    return@setOnClickListener
+                }
+                val res = service.removeScope(app)
+                res?.let {
+                    runOnUiThread {
+                        showToast(it)
+                    }
+                }
+            }
+
+            binding.refreshScope.setOnClickListener {
+                refreshScope(binding, service.scope)
+            }
+        } ?: run {
+            binding.binder.text = "Binder is null!\nPlease restart the app"
         }
-        binding.scopeList.text = text
     }
 
     @SuppressLint("SetTextI18n")
@@ -88,49 +105,10 @@ class MainActivity : Activity() {
 
         binding.binder.text = "Loading"
 
-        val handler = Handler(Looper.getMainLooper())
-        handler.postDelayed({
-            service?.let { service ->
-                binding.binder.text = "Binder acquired"
-                binding.api.text = "API: ${service.apiVersion}"
-                binding.framworkInfo.text =
-                    "${service.frameworkName} ${service.frameworkVersion} [code ${service.frameworkVersionCode}]"
+        updateInfo(binding)
 
-                refreshScope(binding, service.scope)
-
-                binding.requestScope.setOnClickListener {
-                    val app = binding.scopeInput.text.toString().trim()
-                    if (app.isEmpty()) {
-                        Toast.makeText(this@MainActivity, "App name is empty", Toast.LENGTH_SHORT)
-                            .show()
-                        return@setOnClickListener
-                    }
-                    service.requestScope(app, mCallback)
-                }
-
-                binding.removeScope.setOnClickListener {
-                    val app = binding.scopeInput.text.toString().trim()
-                    if (app.isEmpty()) {
-                        Toast.makeText(this@MainActivity, "App name is empty", Toast.LENGTH_SHORT)
-                            .show()
-                        return@setOnClickListener
-                    }
-                    val res = service.removeScope(app)
-
-                    if (res != null) {
-                        runOnUiThread {
-                            Toast.makeText(this@MainActivity, res, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-
-                binding.refreshScope.setOnClickListener {
-                    refreshScope(binding, service.scope)
-                }
-            } ?: run {
-                binding.binder.text = "Binder is null!\nPlease restart the app"
-            }
-
+        Handler(Looper.getMainLooper()).postDelayed({
+            service?.let { updateInfo(binding) }
         }, 5000)
     }
 }

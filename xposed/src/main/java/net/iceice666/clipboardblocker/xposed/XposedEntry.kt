@@ -2,7 +2,6 @@ package net.iceice666.clipboardblocker.xposed
 
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
 import io.github.libxposed.api.XposedInterface
@@ -65,10 +64,15 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
     @SuppressLint("DiscouragedPrivateApi")
     override fun onPackageLoaded(param: PackageLoadedParam) {
         super.onPackageLoaded(param)
-        log("onPackageLoaded: " + param.packageName)
-        log("param classloader is " + param.classLoader)
-        log("module apk path: " + this.applicationInfo.sourceDir)
-        log("----------")
+
+        if (param.packageName == "com.google.android.webview") return
+
+        val text = "onPackageLoaded: ${param.packageName}\n" +
+                "param classloader is ${param.classLoader}\n" +
+                "module apk path: ${this.applicationInfo.sourceDir}\n"
+
+
+        module.log(text)
 
         if (!param.isFirstPackage) return
 
