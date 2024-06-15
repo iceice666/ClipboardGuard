@@ -27,6 +27,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+
+    implementation(libs.libxposed.service)
+
+
     implementation(project(":common"))
     runtimeOnly(project(":xposed"))
 }

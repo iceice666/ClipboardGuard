@@ -9,10 +9,18 @@ android {
     buildFeatures {
         buildConfig = false
     }
+
+    packaging {
+        resources {
+            merges += "META-INF/xposed/*"
+            excludes += "**"
+        }
+    }
 }
 
 dependencies {
-    compileOnly(libs.de.robv.android.xposed.api)
+    compileOnly(libs.libxposed.api)
+
 
 
     implementation(project(":common"))

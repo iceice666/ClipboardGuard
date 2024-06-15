@@ -14,6 +14,11 @@ android {
     }
 
     buildConfig {
+        packageName("net.iceice666.clipboardblocker.common")
+        useKotlinOutput {
+            topLevelConstants = true
+            internalVisibility = false
+        }
 
         buildConfigField("APP_NAME", rootProject.name)
         buildConfigField("PACKAGE_ID", applicationId)

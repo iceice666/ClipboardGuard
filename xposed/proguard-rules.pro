@@ -24,4 +24,4 @@
 -dontwarn org.openjsse.javax.net.ssl.SSLSocket
 -dontwarn org.openjsse.net.ssl.OpenJSSE
 
-#-adaptresourcefilenames
+-adaptresourcefilenames
