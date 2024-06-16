@@ -1,4 +1,4 @@
-package net.iceice666.clipboardblocker.activity
+package net.iceice666.clipboardblocker.ui.activity
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -8,11 +8,10 @@ import android.os.Looper
 import android.widget.Toast
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedService.OnScopeEventListener
-import io.github.libxposed.service.XposedServiceHelper
 import net.iceice666.clipboardblocker.LsposedServiceManager
-import net.iceice666.clipboardblocker.databinding.ActivityMainBinding
+import net.iceice666.clipboardblocker.databinding.ActivityTestBinding
 
-class MainActivity : Activity() {
+class TestActivity : Activity() {
 
     private val service: XposedService? = LsposedServiceManager.getInstance()
 
@@ -49,15 +48,15 @@ class MainActivity : Activity() {
     }
 
     private fun showToast(message: String) {
-        Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this@TestActivity, message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun refreshScope(binding: ActivityMainBinding, scope: List<String>) {
+    private fun refreshScope(binding: ActivityTestBinding, scope: List<String>) {
         binding.scopeList.text = scope.joinToString("\n")
     }
 
     @SuppressLint("SetTextI18n")
-    private fun updateInfo(binding: ActivityMainBinding) {
+    private fun updateInfo(binding: ActivityTestBinding) {
         service?.let { service ->
             binding.binder.text = "Binder acquired"
             binding.api.text = "API: ${service.apiVersion}"
@@ -100,7 +99,7 @@ class MainActivity : Activity() {
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityMainBinding.inflate(layoutInflater)
+        val binding = ActivityTestBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.binder.text = "Loading"
