@@ -11,11 +11,12 @@ import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.annotations.BeforeInvocation
 import io.github.libxposed.api.annotations.XposedHooker
-
+private lateinit var packageName: String
 private lateinit var module: XposedEntry
 
 @Suppress("Unused")
 class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModule(base, param) {
+
 
 
     init {
@@ -23,29 +24,9 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         module = this
     }
 
-//    @XposedHooker
-//    class MyHooker(private val magic: Int) : XposedInterface.Hooker {
-//        companion object {
-//            @JvmStatic
-//            @BeforeInvocation
-//            fun beforeInvocation(callback: BeforeHookCallback): MyHooker {
-//                val key = Random.nextInt()
-//                val appContext = callback.args[0]
-//                module.log("beforeInvocation: key = $key")
-//                module.log("app context: $appContext")
-//                return MyHooker(key)
-//            }
-//
-//            @JvmStatic
-//            @AfterInvocation
-//            fun afterInvocation(callback: AfterHookCallback, context: MyHooker) {
-//                module.log("afterInvocation: key = ${context.magic}")
-//            }
-//        }
-//    }
 
     @XposedHooker
-    class MSetPrimaryClipHooker : XposedInterface.Hooker {
+    class SetPrimaryClipHooker : XposedInterface.Hooker {
         companion object {
 
             @JvmStatic
@@ -56,7 +37,9 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
                 if (text == "") return
 
 
-                module.log("clip data: $text")
+
+
+                module.log("$packageName: $text")
             }
         }
     }
@@ -67,20 +50,18 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
 
         if (param.packageName == "com.google.android.webview") return
 
-        val text = "onPackageLoaded: ${param.packageName}\n" +
-                "param classloader is ${param.classLoader}\n" +
-                "module apk path: ${this.applicationInfo.sourceDir}\n"
-
-
-        module.log(text)
-
         if (!param.isFirstPackage) return
 
-        val MSetPrimaryClip = ClipboardManager::class.java.getDeclaredMethod(
-            "setPrimaryClip",
-            ClipData::class.java
+        packageName = param.packageName
+
+
+        hook(
+            ClipboardManager::class.java.getDeclaredMethod(
+                "setPrimaryClip",
+                ClipData::class.java
+            ),
+            SetPrimaryClipHooker::class.java
         )
-        hook(MSetPrimaryClip, MSetPrimaryClipHooker::class.java)
 
     }
 }
