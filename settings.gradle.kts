@@ -22,7 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Clipboard Blocker"
+rootProject.name = "Clipboard Guard"
 include(":app")
 include(":xposed")
 include(":common")

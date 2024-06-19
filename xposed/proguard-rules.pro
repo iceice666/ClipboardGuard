@@ -1,5 +1,5 @@
 -keep class com.github.kyuubiran.ezxhelper.utils.** { *; }
--keep class net.iceice666.clipboardblocker.xposed.XposedEntry { *; }
+-keep class net.iceice666.clipboardguard.xposed.XposedEntry { *; }
 
 -dontwarn java.lang.invoke.StringConcatFactory
 -dontwarn android.content.res.XModuleResources

@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.iceice666.clipboardblocker"
+    namespace = "net.iceice666.clipboardguard"
 
     buildFeatures {
         buildConfig = true
