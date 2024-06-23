@@ -1,7 +1,6 @@
 package net.iceice666.clipboardguard.xposed
 
 
-import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import io.github.libxposed.api.XposedInterface
@@ -14,17 +13,63 @@ import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.annotations.AfterInvocation
 import io.github.libxposed.api.annotations.BeforeInvocation
 import io.github.libxposed.api.annotations.XposedHooker
-import  net.iceice666.clipboardguard.xposed.ConfigLoader
 
 private lateinit var packageName: String
 private lateinit var module: XposedEntry
-private lateinit var getRule: HashSet<Regex>
-private lateinit var setRule: HashSet<Regex>
+private val getterRulesets by lazy { HashSet<Regex>() }
+private val setterRulesets by lazy { HashSet<Regex>() }
 private lateinit var log: Logger
 
 @Suppress("Unused")
 class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModule(base, param) {
 
+    // Core function
+    fun shouldFilter(data: ClipData, rs: RulesetTypes): Boolean {
+        val fmt: (String) -> String =
+            { msg ->
+                when (rs) {
+                    RulesetTypes.Setter -> "(Setter) "
+                    RulesetTypes.Getter -> "(Getter) "
+                } + msg
+            }
+
+        val rulesets: HashSet<Regex> =
+            when (rs) {
+                RulesetTypes.Getter -> getterRulesets
+                RulesetTypes.Setter -> setterRulesets
+            }
+
+        if (rulesets.isEmpty()) {
+            log.debug(fmt("Empty rule sets. Ignored."))
+            return false
+        }
+
+        val text = data.getItemAt(0).text
+
+        if (text == null) {
+            log.debug(fmt("Not a text context. Ignored."))
+            return false
+        }
+
+        if (text.isBlank()) {
+            log.info(fmt("Empty context. Ignored."))
+            return false
+        }
+
+        // Iterate through all rule sets
+        log.debug(fmt("Current context: $text"))
+
+        for (rule in rulesets) {
+            if (rule.matches(text)) {
+                log.info(fmt("Rule matched. Filtered."))
+                return true
+            }
+        }
+
+        log.info(fmt("$packageName: No rules matched. Skipped."))
+
+        return false
+    }
 
 
     init {
@@ -36,18 +81,16 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
     override fun onPackageLoaded(param: PackageLoadedParam) {
         super.onPackageLoaded(param)
 
-        if (param.packageName == "com.google.android.webview") return
-
-        if (!param.isFirstPackage) return
+        if (param.packageName == "com.google.android.webview" || !param.isFirstPackage) return
 
         // Initialize variables
         packageName = param.packageName
         log = Logger(packageName) { msg: String -> module.log(msg) }
 
         // Set up rules
-        ConfigLoader.getRuleSets(packageName) .apply {
-            getRule = first
-            setRule = second
+        ConfigLoader.getRuleSets(packageName).apply {
+            getterRulesets.addAll(first)
+            setterRulesets.addAll(second)
         }
 
 
@@ -62,51 +105,31 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         hook(
             ClipboardManager::class.java.getDeclaredMethod(
                 "getPrimaryClip",
-                Void::class.java
             ),
             GetPrimaryClipHooker::class.java
         )
 
     }
 
+    enum class RulesetTypes {
+        Getter,
+        Setter
+    }
+
 
     @XposedHooker
     class SetPrimaryClipHooker : Hooker {
         companion object {
-
             @JvmStatic
             @BeforeInvocation
             fun beforeHookedMethod(callback: BeforeHookCallback) {
-
-                if (getRule.isEmpty()) {
-                    module.log("$packageName: Empty rule sets. Ignored.")
-                    return
+                if (module.shouldFilter(
+                        callback.args[0] as ClipData,
+                        RulesetTypes.Setter
+                    )
+                ) {
+                    callback.returnAndSkip(null)
                 }
-
-                val clipData = callback.args[0] as ClipData
-                val text = clipData.getItemAt(0).text
-
-                if (text == null) {
-                    module.log("$packageName: Not a text context. Ignored.")
-                }
-
-                if (text == "") {
-                    module.log("$packageName: Empty context. Ignored.")
-                }
-
-                // Iterate through all rule sets
-                module.log("$packageName: Current context: $text")
-                for (rule in getRule) {
-                    if (rule.matches(text)) {
-                        module.log("$packageName: Rule matched. Filtered.")
-                        callback.returnAndSkip(null)
-                        return
-                    }
-                }
-
-                module.log("$packageName: No rules matched. Skipped.")
-
-
             }
         }
     }
@@ -114,43 +137,17 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
     @XposedHooker
     class GetPrimaryClipHooker : Hooker {
         companion object {
-
             @JvmStatic
             @AfterInvocation
             fun afterHookedMethod(callback: AfterHookCallback) {
-                if (getRule.isEmpty()) {
-                    module.log("$packageName: Empty rule sets. Ignored.")
-                    return
+                if (module.shouldFilter(
+                        callback.result as ClipData,
+                        RulesetTypes.Getter
+                    )
+                ) {
+                    callback.result = ClipData.newPlainText("", "")
                 }
-
-
-                val result = callback.result as ClipData
-                val text = result.getItemAt(0).text
-
-                if (text == null) {
-                    module.log("$packageName: Not a text context. Ignored.")
-                }
-
-                if (text == "") {
-                    module.log("$packageName: Empty context. Ignored.")
-                }
-
-                // Iterate through all rule sets
-                module.log("$packageName: Current context: $text")
-                for (rule in getRule) {
-                    if (rule.matches(text)) {
-                        module.log("$packageName: Rule matched. Filtered.")
-                        callback.result = ClipData.newPlainText("", "")
-                        return
-                    }
-                }
-
-                module.log("$packageName: No rules matched. Skipped.")
-
-
             }
         }
     }
-
-
 }

@@ -42,8 +42,8 @@ class Logger(
             Level.ERROR -> "[Error]"
             Level.FATAL -> "[Fatal]"
         }
-        text += "[$name]"
         text += "[${SimpleDateFormat("MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}]"
+        text += "[$name]"
         text += message
         if (!text.endsWith("\n")) text += "\n"
         if (cause != null) text += Log.getStackTraceString(cause)
