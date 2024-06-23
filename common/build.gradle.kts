@@ -14,7 +14,7 @@ android {
     }
 
     buildConfig {
-        packageName("net.iceice666.clipboardblocker.common")
+        packageName("net.iceice666.clipboardguard.common")
         useKotlinOutput {
             topLevelConstants = true
             internalVisibility = false

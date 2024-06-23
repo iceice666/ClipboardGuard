@@ -1,6 +1,7 @@
 package net.iceice666.clipboardguard.xposed
 
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import io.github.libxposed.api.XposedInterface
@@ -78,7 +79,7 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
             fun beforeHookedMethod(callback: BeforeHookCallback) {
 
                 if (getRule.isEmpty()) {
-                    log.info("Empty rule sets. Ignored.")
+                    module.log("$packageName: Empty rule sets. Ignored.")
                     return
                 }
 
@@ -86,24 +87,24 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
                 val text = clipData.getItemAt(0).text
 
                 if (text == null) {
-                    log.info("Not a text context. Ignored.")
+                    module.log("$packageName: Not a text context. Ignored.")
                 }
 
                 if (text == "") {
-                    log.info("Empty context. Ignored.")
+                    module.log("$packageName: Empty context. Ignored.")
                 }
 
                 // Iterate through all rule sets
-                log.debug("Current context: $text")
+                module.log("$packageName: Current context: $text")
                 for (rule in getRule) {
                     if (rule.matches(text)) {
-                        log.info("Rule matched. Filtered.")
+                        module.log("$packageName: Rule matched. Filtered.")
                         callback.returnAndSkip(null)
                         return
                     }
                 }
 
-                log.info("$packageName: No rules matched. Skipped.")
+                module.log("$packageName: No rules matched. Skipped.")
 
 
             }
@@ -118,7 +119,7 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
             @AfterInvocation
             fun afterHookedMethod(callback: AfterHookCallback) {
                 if (getRule.isEmpty()) {
-                    log.info("$packageName: Empty rule sets. Ignored.")
+                    module.log("$packageName: Empty rule sets. Ignored.")
                     return
                 }
 
@@ -127,24 +128,24 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
                 val text = result.getItemAt(0).text
 
                 if (text == null) {
-                    log.info("$packageName: Not a text context. Ignored.")
+                    module.log("$packageName: Not a text context. Ignored.")
                 }
 
                 if (text == "") {
-                    log.info("$packageName: Empty context. Ignored.")
+                    module.log("$packageName: Empty context. Ignored.")
                 }
 
                 // Iterate through all rule sets
-                log.debug("$packageName: Current context: $text")
+                module.log("$packageName: Current context: $text")
                 for (rule in getRule) {
                     if (rule.matches(text)) {
-                        log.info("$packageName: Rule matched. Filtered.")
+                        module.log("$packageName: Rule matched. Filtered.")
                         callback.result = ClipData.newPlainText("", "")
                         return
                     }
                 }
 
-                log.info("$packageName: No rules matched. Skipped.")
+                module.log("$packageName: No rules matched. Skipped.")
 
 
             }
