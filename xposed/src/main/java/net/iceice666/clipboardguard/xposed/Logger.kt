@@ -1,4 +1,4 @@
-package net.iceice666.clipboardblocker.xposed
+package net.iceice666.clipboardguard.xposed
 
 // Custom logging module
 class Logger(packageName: String) {

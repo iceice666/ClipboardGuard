@@ -7,14 +7,14 @@ plugins {
 val applicationId: String by rootProject.extra
 
 android {
-    namespace = "net.iceice666.clipboardblocker.common"
+    namespace = "net.iceice666.clipboardguard.common"
 
     buildFeatures {
         buildConfig = true
     }
 
     buildConfig {
-        packageName("net.iceice666.clipboardblocker.common")
+        packageName("net.iceice666.clipboardguard.common")
         useKotlinOutput {
             topLevelConstants = true
             internalVisibility = false

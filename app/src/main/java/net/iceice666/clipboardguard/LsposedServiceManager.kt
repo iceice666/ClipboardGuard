@@ -1,4 +1,4 @@
-package net.iceice666.clipboardblocker
+package net.iceice666.clipboardguard
 
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
