@@ -139,7 +139,6 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         hook(
             ClipboardManager::class.java.getDeclaredMethod(
                 "getPrimaryClip",
-                Void::class.java
             ),
             GetPrimaryClipHooker::class.java
         )
