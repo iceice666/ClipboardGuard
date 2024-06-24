@@ -16,66 +16,16 @@ import io.github.libxposed.api.annotations.XposedHooker
 
 private lateinit var packageName: String
 private lateinit var module: XposedEntry
-private val getterRulesets by lazy { HashSet<Regex>() }
-private val setterRulesets by lazy { HashSet<Regex>() }
+private lateinit var getterRulesets: Ruleset
+private lateinit var setterRulesets: Ruleset
 private lateinit var log: Logger
 
 @Suppress("Unused")
 class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModule(base, param) {
 
-    // Core function
-    fun shouldFilter(data: ClipData, rs: RulesetTypes): Boolean {
-        val fmt: (String) -> String =
-            { msg ->
-                when (rs) {
-                    RulesetTypes.Setter -> "(Setter) "
-                    RulesetTypes.Getter -> "(Getter) "
-                } + msg
-            }
-
-        val rulesets: HashSet<Regex> =
-            when (rs) {
-                RulesetTypes.Getter -> getterRulesets
-                RulesetTypes.Setter -> setterRulesets
-            }
-
-        if (rulesets.isEmpty()) {
-            log.debug(fmt("Empty rule sets. Ignored."))
-            return false
-        }
-
-        val text = data.getItemAt(0).text
-
-        if (text == null) {
-            log.debug(fmt("Not a text context. Ignored."))
-            return false
-        }
-
-        if (text.isBlank()) {
-            log.info(fmt("Empty context. Ignored."))
-            return false
-        }
-
-        // Iterate through all rule sets
-        log.debug(fmt("Current context: $text"))
-
-        for (rule in rulesets) {
-            if (rule.matches(text)) {
-                log.info(fmt("Rule matched. Filtered."))
-                return true
-            }
-        }
-
-        log.info(fmt("$packageName: No rules matched. Skipped."))
-
-        return false
-    }
-
-
     init {
         module = this
         module.log("ModuleMain at " + param.processName)
-
     }
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
@@ -83,39 +33,69 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
 
         if (param.packageName == "com.google.android.webview" || !param.isFirstPackage) return
 
-        // Initialize variables
         packageName = param.packageName
         log = Logger(packageName) { msg: String -> module.log(msg) }
 
-        // Set up rules
         ConfigLoader.getRuleSets(packageName).apply {
-            getterRulesets.addAll(first)
-            setterRulesets.addAll(second)
+            getterRulesets = first
+            setterRulesets = second
         }
 
-
         hook(
-            ClipboardManager::class.java.getDeclaredMethod(
-                "setPrimaryClip",
-                ClipData::class.java
-            ),
+            ClipboardManager::class.java.getDeclaredMethod("setPrimaryClip", ClipData::class.java),
             SetPrimaryClipHooker::class.java
         )
 
         hook(
-            ClipboardManager::class.java.getDeclaredMethod(
-                "getPrimaryClip",
-            ),
+            ClipboardManager::class.java.getDeclaredMethod("getPrimaryClip"),
             GetPrimaryClipHooker::class.java
         )
+    }
 
+    fun shouldFilter(clipData: ClipData, rst: RulesetTypes): Boolean {
+        val fmt = { msg: String -> "(${rst.name}) $msg" }
+        val rulesets = when (rst) {
+            RulesetTypes.Getter -> getterRulesets
+            RulesetTypes.Setter -> setterRulesets
+        }
+
+        val data = clipData.getItemAt(0)
+        val contexts =
+            listOfNotNull(data.intent?.toString(), data.uri?.toString(), data.text?.toString())
+
+        for (context in contexts) {
+            if (context.isBlank()) {
+                log.info(fmt("Empty context. Ignored."))
+                return false
+            }
+
+            val ruleset = when (context) {
+                data.intent?.toString() -> rulesets.intent
+                data.uri?.toString() -> rulesets.uri
+                data.text?.toString() -> rulesets.text
+                else -> emptySet()
+            }
+
+            if (ruleset.isEmpty()) {
+                log.debug(fmt("Empty rule sets. Ignored."))
+                return false
+            }
+
+            log.debug(fmt("Current context: $context"))
+
+            if (ruleset.any { it.matches(context) }) {
+                log.info(fmt("Rule matched. Filtered."))
+                return true
+            }
+        }
+
+        log.info(fmt("No rules matched. Skipped."))
+        return false
     }
 
     enum class RulesetTypes {
-        Getter,
-        Setter
+        Getter, Setter
     }
-
 
     @XposedHooker
     class SetPrimaryClipHooker : Hooker {
@@ -123,11 +103,7 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
             @JvmStatic
             @BeforeInvocation
             fun beforeHookedMethod(callback: BeforeHookCallback) {
-                if (module.shouldFilter(
-                        callback.args[0] as ClipData,
-                        RulesetTypes.Setter
-                    )
-                ) {
+                if (module.shouldFilter(callback.args[0] as ClipData, RulesetTypes.Setter)) {
                     callback.returnAndSkip(null)
                 }
             }
@@ -141,7 +117,7 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
             @AfterInvocation
             fun afterHookedMethod(callback: AfterHookCallback) {
                 if (module.shouldFilter(
-                        callback.result as ClipData,
+                        callback.result as? ClipData ?: return,
                         RulesetTypes.Getter
                     )
                 ) {

@@ -3,26 +3,39 @@ package net.iceice666.clipboardguard.xposed
 
 object ConfigLoader {
 
-    private var getRuleSets: HashMap<String, HashSet<Regex>>
-    private var setRuleSets: HashMap<String, HashSet<Regex>>
+    private var getRuleSets: HashMap<String, Ruleset>
+    private var setRuleSets: HashMap<String, Ruleset>
 
     init {
 
-        getRuleSets = HashMap<String, HashSet<Regex>>().apply {
-            put("com.baidu.tieba", HashSet<Regex>().apply { add(Regex(".*")) })
+        getRuleSets = HashMap<String, Ruleset>().apply {
+            put(
+                "com.baidu.tieba",
+                Ruleset(
+                    text = HashSet<Regex>().apply { add(Regex(".*")) }
+                )
+            )
         }
 
-        setRuleSets = HashMap<String, HashSet<Regex>>().apply {
+        setRuleSets = HashMap<String, Ruleset>().apply {
 
         }
     }
 
 
-    fun getRuleSets(packageName: String): Pair<HashSet<Regex>, HashSet<Regex>> {
-        val a = getRuleSets[packageName] ?: HashSet()
-        val b = setRuleSets[packageName] ?: HashSet()
+    fun getRuleSets(packageName: String): Pair<Ruleset, Ruleset> {
+        val a = getRuleSets[packageName] ?: Ruleset()
+        val b = setRuleSets[packageName] ?: Ruleset()
         return Pair(a, b)
     }
 
+
+}
+
+data class Ruleset(
+    val intent: HashSet<Regex> = HashSet(),
+    val uri: HashSet<Regex> = HashSet(),
+    val text: HashSet<Regex> = HashSet()
+) {
 
 }
