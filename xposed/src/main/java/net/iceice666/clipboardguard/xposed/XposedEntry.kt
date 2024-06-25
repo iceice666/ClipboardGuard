@@ -43,11 +43,13 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
 
         hook(
             ClipboardManager::class.java.getDeclaredMethod("setPrimaryClip", ClipData::class.java),
+            10,
             SetPrimaryClipHooker::class.java
         )
 
         hook(
             ClipboardManager::class.java.getDeclaredMethod("getPrimaryClip"),
+            10,
             GetPrimaryClipHooker::class.java
         )
     }
@@ -93,9 +95,6 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         return false
     }
 
-    enum class RulesetTypes {
-        Getter, Setter
-    }
 
     @XposedHooker
     class SetPrimaryClipHooker : Hooker {

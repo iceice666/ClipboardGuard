@@ -1,5 +1,6 @@
 package net.iceice666.clipboardguard.xposed
 
+import net.iceice666.clipboardguard.common.PACKAGE_ID
 
 object ConfigLoader {
 
@@ -20,6 +21,8 @@ object ConfigLoader {
         setRuleSets = HashMap<String, Ruleset>().apply {
 
         }
+
+
     }
 
 
@@ -36,6 +39,8 @@ data class Ruleset(
     val intent: HashSet<Regex> = HashSet(),
     val uri: HashSet<Regex> = HashSet(),
     val text: HashSet<Regex> = HashSet()
-) {
+)
 
+enum class RulesetTypes {
+    Getter, Setter
 }
