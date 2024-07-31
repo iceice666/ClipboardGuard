@@ -1,4 +1,4 @@
-package net.iceice666.clipboardguard.xposed
+package me.iceice666.clipboardguard.xposed
 
 
 import android.content.ClipData
@@ -16,8 +16,7 @@ import io.github.libxposed.api.annotations.XposedHooker
 
 private lateinit var packageName: String
 private lateinit var module: XposedEntry
-private lateinit var getterRulesets: Ruleset
-private lateinit var setterRulesets: Ruleset
+private var rulesets = RuleSets
 private lateinit var log: Logger
 
 @Suppress("Unused")
@@ -36,11 +35,6 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         packageName = param.packageName
         log = Logger(packageName) { msg: String -> module.log(msg) }
 
-        ConfigLoader.getRuleSets(packageName).apply {
-            getterRulesets = first
-            setterRulesets = second
-        }
-
         hook(
             ClipboardManager::class.java.getDeclaredMethod("setPrimaryClip", ClipData::class.java),
             10,
@@ -54,45 +48,51 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         )
     }
 
-    fun shouldFilter(clipData: ClipData, rst: RulesetTypes): Boolean {
-        val fmt = { msg: String -> "(${rst.name}) $msg" }
-        val rulesets = when (rst) {
-            RulesetTypes.Getter -> getterRulesets
-            RulesetTypes.Setter -> setterRulesets
+    private fun applyRules(
+        content: String,
+        ruleset: Set<Regex>,
+        fmt: (String) -> String
+    ): Boolean {
+        if (content.isBlank()) {
+            log.info(fmt("Empty context. Ignored."))
+            return false
         }
 
-        val data = clipData.getItemAt(0)
-        val contexts =
-            listOfNotNull(data.intent?.toString(), data.uri?.toString(), data.text?.toString())
+        if (ruleset.isEmpty()) {
+            log.debug(fmt("Empty rule sets. Ignored."))
+            return false
+        }
 
-        for (context in contexts) {
-            if (context.isBlank()) {
-                log.info(fmt("Empty context. Ignored."))
-                return false
-            }
+        log.debug(fmt("Current context: $content"))
 
-            val ruleset = when (context) {
-                data.intent?.toString() -> rulesets.intent
-                data.uri?.toString() -> rulesets.uri
-                data.text?.toString() -> rulesets.text
-                else -> emptySet()
-            }
-
-            if (ruleset.isEmpty()) {
-                log.debug(fmt("Empty rule sets. Ignored."))
-                return false
-            }
-
-            log.debug(fmt("Current context: $context"))
-
-            if (ruleset.any { it.matches(context) }) {
-                log.info(fmt("Rule matched. Filtered."))
-                return true
-            }
+        if (ruleset.any { it.matches(content) }) {
+            log.info(fmt("Rule matched. Filtered."))
+            return true
         }
 
         log.info(fmt("No rules matched. Skipped."))
         return false
+    }
+
+    fun shouldFilter(clipData: ClipData, actionKind: ActionKind): Boolean {
+        val data = clipData.getItemAt(0)
+
+        return listOf(
+            data.uri?.toString() to ContentType.Uri,
+            data.intent?.toString() to ContentType.Intent,
+            data.text?.toString() to ContentType.Text
+        ).any { (content, contentType) ->
+            content?.let {
+                val fmt = { msg: String -> "($actionKind+$contentType) $msg" }
+                applyRules(
+                    it,
+                    rulesets.request(RequestField(packageName, actionKind, contentType)),
+                    fmt
+                )
+            } ?: false
+        }
+
+
     }
 
 
@@ -102,7 +102,8 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
             @JvmStatic
             @BeforeInvocation
             fun beforeHookedMethod(callback: BeforeHookCallback) {
-                if (module.shouldFilter(callback.args[0] as ClipData, RulesetTypes.Setter)) {
+                val data = callback.args[0] as ClipData
+                if (module.shouldFilter(data, ActionKind.Write)) {
                     callback.returnAndSkip(null)
                 }
             }
@@ -115,11 +116,8 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
             @JvmStatic
             @AfterInvocation
             fun afterHookedMethod(callback: AfterHookCallback) {
-                if (module.shouldFilter(
-                        callback.result as? ClipData ?: return,
-                        RulesetTypes.Getter
-                    )
-                ) {
+                val data = callback.result as? ClipData ?: return
+                if (module.shouldFilter(data, ActionKind.Read)) {
                     callback.result = ClipData.newPlainText("", "")
                 }
             }
