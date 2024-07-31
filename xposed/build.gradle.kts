@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.iceice666.clipboardguard.xposed"
+    namespace = "me.iceice666.clipboardguard.xposed"
 
     buildFeatures {
         buildConfig = false

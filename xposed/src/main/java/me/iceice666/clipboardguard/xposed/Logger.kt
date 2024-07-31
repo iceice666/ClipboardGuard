@@ -1,4 +1,4 @@
-package net.iceice666.clipboardguard.xposed
+package me.iceice666.clipboardguard.xposed
 
 import android.util.Log
 import java.text.SimpleDateFormat

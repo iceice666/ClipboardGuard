@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.iceice666.clipboardguard"
+    namespace = "me.iceice666.clipboardguard"
 
     buildFeatures {
         buildConfig = true

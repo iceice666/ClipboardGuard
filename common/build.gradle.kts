@@ -7,7 +7,7 @@ plugins {
 val applicationId: String by rootProject.extra
 
 android {
-    namespace = "net.iceice666.clipboardguard.common"
+    namespace = "me.iceice666.clipboardguard.common"
 
     buildFeatures {
         buildConfig = true

@@ -1,4 +1,4 @@
-package net.iceice666.clipboardguard
+package me.iceice666.clipboardguard
 
 class Config {
     val SetRule : HashMap<String, Regex> = HashMap();

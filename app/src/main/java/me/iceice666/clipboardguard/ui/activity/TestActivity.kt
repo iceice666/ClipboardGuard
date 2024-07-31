@@ -1,4 +1,4 @@
-package net.iceice666.clipboardguard.ui.activity
+package me.iceice666.clipboardguard.ui.activity
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -8,8 +8,8 @@ import android.os.Looper
 import android.widget.Toast
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedService.OnScopeEventListener
-import net.iceice666.clipboardguard.databinding.ActivityTestBinding
-import net.iceice666.clipboardguard.LsposedServiceManager
+import me.iceice666.clipboardguard.databinding.ActivityTestBinding
+import me.iceice666.clipboardguard.LsposedServiceManager
 
 
 class TestActivity : Activity() {
