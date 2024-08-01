@@ -14,7 +14,7 @@ import me.iceice666.clipboardguard.LsposedServiceManager
 
 class TestActivity : Activity() {
 
-    private val service: XposedService? = LsposedServiceManager.getInstance()
+    private val service: XposedService? = LsposedServiceManager.service
 
     private val mCallback = object : OnScopeEventListener {
         override fun onScopeRequestPrompted(packageName: String) {
