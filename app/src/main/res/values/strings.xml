@@ -4,4 +4,5 @@
     <string name="title_home">home</string>
     <string name="title_logs">logs</string>
     <string name="title_settings">settings</string>
+    <string name="title_activity_main">MainActivity</string>
 </resources>

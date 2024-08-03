@@ -19,7 +19,7 @@ private lateinit var module: XposedEntry
 private var rulesets = RuleSets
 private lateinit var log: Logger
 
-@Suppress("Unused")
+
 class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModule(base, param) {
 
     init {
@@ -75,27 +75,30 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
     }
 
     fun shouldFilter(clipData: ClipData, actionKind: ActionKind): Boolean {
-        val data = clipData.getItemAt(0)
+        val clipItem = clipData.getItemAt(0)
 
-        return listOf(
-            data.uri?.toString() to ContentType.Uri,
-            data.intent?.toString() to ContentType.Intent,
-            data.text?.toString() to ContentType.Text
-        ).any { (content, contentType) ->
-            content?.let {
-                val fmt = { msg: String -> "($actionKind+$contentType) $msg" }
-                applyRules(
-                    it,
-                    rulesets.request(RequestField(packageName, actionKind, contentType)),
-                    fmt
-                )
-            } ?: false
+        val (contentType, content) = when {
+            clipItem.uri != null -> ContentType.Uri to clipItem.uri.toString()
+            clipItem.intent != null -> ContentType.Intent to clipItem.intent.toString()
+            clipItem.text != null -> ContentType.Text to clipItem.text.toString()
+            else -> return false
         }
 
+        val ruleset = rulesets.request(RequestField(packageName, actionKind, contentType))
+        val result = applyRules(content, ruleset) { msg -> "($actionKind+$contentType) $msg" }
 
+        if (result) {
+            val pref = getRemotePreferences(Constants.RemotePreferences.FILTERER_COUNTER)
+            val prefKey = "${packageName}.$actionKind+$contentType"
+            val origin = pref.getLong(prefKey, 0)
+            pref.edit().putLong(prefKey, origin + 1).apply()
+        }
+
+        return result
     }
 
 
+    @Suppress("Unused")
     @XposedHooker
     class SetPrimaryClipHooker : Hooker {
         companion object {
@@ -110,6 +113,7 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         }
     }
 
+    @Suppress("Unused")
     @XposedHooker
     class GetPrimaryClipHooker : Hooker {
         companion object {
