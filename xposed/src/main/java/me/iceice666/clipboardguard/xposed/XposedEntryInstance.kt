@@ -14,17 +14,18 @@ import io.github.libxposed.api.annotations.AfterInvocation
 import io.github.libxposed.api.annotations.BeforeInvocation
 import io.github.libxposed.api.annotations.XposedHooker
 
-private lateinit var packageName: String
-private lateinit var module: XposedEntry
-private var rulesets = RuleSets
-private lateinit var log: Logger
 
+private lateinit var module: XposedEntryInstance
 
-class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModule(base, param) {
+class XposedEntryInstance(base: XposedInterface, param: ModuleLoadedParam) :
+    XposedModule(base, param) {
+
+    lateinit var packageName: String
+    private lateinit var log: Logger
 
     init {
         module = this
-        module.log("ModuleMain at " + param.processName)
+        module.log("ModuleMain at process" + param.processName)
     }
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
@@ -33,7 +34,7 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         if (param.packageName == "com.google.android.webview" || !param.isFirstPackage) return
 
         packageName = param.packageName
-        log = Logger(packageName) { msg: String -> module.log(msg) }
+        log = Logger(this)
 
         hook(
             ClipboardManager::class.java.getDeclaredMethod("setPrimaryClip", ClipData::class.java),
@@ -48,30 +49,33 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
         )
     }
 
-    private fun applyRules(
-        content: String,
-        ruleset: Set<Regex>,
-        fmt: (String) -> String
-    ): Boolean {
-        if (content.isBlank()) {
-            log.info(fmt("Empty context. Ignored."))
-            return false
+    enum class ApplyResult {
+        EmptyContent,
+        EmptyRuleset,
+        Matched,
+        NotMatched;
+
+        override fun toString(): String {
+            return when (this) {
+                EmptyContent -> "Empty content. Ignored."
+                EmptyRuleset -> "Empty rule sets. Ignored."
+                Matched -> "Rule matched. Filtered."
+                NotMatched -> "No rules matched. Skipped."
+            }
         }
 
-        if (ruleset.isEmpty()) {
-            log.debug(fmt("Empty rule sets. Ignored."))
-            return false
+    }
+
+    private fun applyRules(content: String, ruleset: Set<Regex>): ApplyResult {
+        return if (content.isBlank()) {
+            ApplyResult.EmptyContent
+        } else if (ruleset.isEmpty()) {
+            ApplyResult.EmptyRuleset
+        } else if (ruleset.any { it.matches(content) }) {
+            ApplyResult.Matched
+        } else {
+            ApplyResult.NotMatched
         }
-
-        log.debug(fmt("Current context: $content"))
-
-        if (ruleset.any { it.matches(content) }) {
-            log.info(fmt("Rule matched. Filtered."))
-            return true
-        }
-
-        log.info(fmt("No rules matched. Skipped."))
-        return false
     }
 
     fun shouldFilter(clipData: ClipData, actionKind: ActionKind): Boolean {
@@ -84,17 +88,19 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) : XposedModul
             else -> return false
         }
 
-        val ruleset = rulesets.request(RequestField(packageName, actionKind, contentType))
-        val result = applyRules(content, ruleset) { msg -> "($actionKind+$contentType) $msg" }
+        val ruleset = RuleSets.request(RequestField(packageName, actionKind, contentType))
+        val result = applyRules(content, ruleset)
 
-        if (result) {
+        log.info("($actionKind+$contentType):$result")
+
+        if (result == ApplyResult.Matched) {
             val pref = getRemotePreferences(Constants.RemotePreferences.FILTERER_COUNTER)
             val prefKey = "${packageName}.$actionKind+$contentType"
             val origin = pref.getLong(prefKey, 0)
             pref.edit().putLong(prefKey, origin + 1).apply()
         }
 
-        return result
+        return result == ApplyResult.Matched
     }
 
 

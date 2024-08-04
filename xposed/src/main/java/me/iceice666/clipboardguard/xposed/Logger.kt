@@ -7,32 +7,36 @@ import java.util.Locale
 
 // Custom logging module
 class Logger(
-    private var name: String,
-    private var xposedLogger: ((String) -> Unit)? = null
+    private val module: XposedEntryInstance
 ) {
 
 
-    fun debug(message: String) {
-        log(Level.DEBUG, message)
+    fun debug(message: String, toXposedLog: Boolean = false) =
+        log(Level.DEBUG, message, null, toXposedLog)
+
+    fun info(message: String, toXposedLog: Boolean = false) =
+        log(Level.INFO, message, null, toXposedLog)
+
+    fun warn(message: String, cause: Throwable? = null, toXposedLog: Boolean = false) =
+        log(Level.WARN, message, cause, toXposedLog)
+
+    fun error(message: String, cause: Throwable? = null, toXposedLog: Boolean = true) =
+        log(Level.ERROR, message, cause, toXposedLog)
+
+    fun fatal(message: String, cause: Throwable? = null, toXposedLog: Boolean = true) =
+        log(Level.FATAL, message, cause, toXposedLog)
+
+    private fun log(
+        level: Level,
+        message: String,
+        cause: Throwable?,
+        toXposedLog: Boolean = false
+    ) {
+        val msg = generateMessage(level, message, cause)
+        if (toXposedLog) module.log(msg)
     }
 
-    fun info(message: String) {
-        log(Level.INFO, message)
-    }
-
-    fun warn(message: String) {
-        log(Level.WARN, message)
-    }
-
-    fun error(message: String) {
-        log(Level.ERROR, message)
-    }
-
-    fun fatal(message: String) {
-        log(Level.FATAL, message)
-    }
-
-    private fun log(level: Level, message: String, cause: Throwable? = null) {
+    private fun generateMessage(level: Level, message: String, cause: Throwable?): String {
         var text = ""
 
         text += when (level) {
@@ -43,16 +47,15 @@ class Logger(
             Level.FATAL -> "[Fatal]"
         }
         text += "[${SimpleDateFormat("MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}]"
-        text += "[$name]"
+        text += "[${module.packageName}]"
         text += message
         if (!text.endsWith("\n")) text += "\n"
         if (cause != null) text += Log.getStackTraceString(cause)
         if (!text.endsWith("\n")) text += "\n"
 
-        xposedLogger?.let {
-            it(text)
-        }
 
+
+        return text
     }
 
 
