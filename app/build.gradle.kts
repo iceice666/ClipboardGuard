@@ -63,7 +63,6 @@ dependencies {
 
     implementation(libs.libxposed.service)
 
-
     implementation(project(":common"))
     runtimeOnly(project(":xposed"))
 }

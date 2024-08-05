@@ -8,6 +8,7 @@ activityCompose = "1.9.1"
 composeBom = "2024.06.00"
 xposed-api = "100"
 xposed-service = "100-1.0.0"
+jetbrainsKotlinJvm = "2.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,3 +36,4 @@ buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
