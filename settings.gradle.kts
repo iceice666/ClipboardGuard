@@ -25,4 +25,5 @@ dependencyResolutionManagement {
 rootProject.name = "Clipboard Guard"
 include(":app")
 include(":xposed")
+
 include(":common")

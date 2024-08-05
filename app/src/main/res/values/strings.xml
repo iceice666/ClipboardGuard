@@ -5,4 +5,9 @@
     <string name="title_logs">logs</string>
     <string name="title_settings">settings</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_rule_sets">RuleSetsActivity</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_statistics">StatisticsActivity</string>
+    <string name="title_activity_apply_rules">ApplyRulesActivity</string>
+    <string name="title_activity_logging">LoggingActivity</string>
 </resources>

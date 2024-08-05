@@ -2,17 +2,41 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-
     <application
+        android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:allowBackup="true"
-        android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ClipboardGuard"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.activity.LoggingActivity"
+            android:exported="false"
+            android:label="@string/title_activity_logging"
+            android:theme="@style/Theme.ClipboardGuard" />
+        <activity
+            android:name=".ui.activity.ApplyRulesActivity"
+            android:exported="false"
+            android:label="@string/title_activity_apply_rules"
+            android:theme="@style/Theme.ClipboardGuard" />
+        <activity
+            android:name=".ui.activity.StatisticsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_statistics"
+            android:theme="@style/Theme.ClipboardGuard" />
+        <activity
+            android:name=".ui.activity.SettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/Theme.ClipboardGuard" />
+        <activity
+            android:name=".ui.activity.RuleSetsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_rule_sets"
+            android:theme="@style/Theme.ClipboardGuard" />
         <activity
             android:name=".ui.activity.MainActivity"
             android:exported="false"
