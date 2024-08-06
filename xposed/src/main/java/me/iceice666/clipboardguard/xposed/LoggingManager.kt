@@ -8,7 +8,7 @@ import java.util.Locale
 
 object LoggingManager {
 
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH:mm:ss", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH:mm:ss")
 
     private fun buildXposedLog(msg: MessagePacket): String {
         val level = msg.level.toString()
@@ -17,7 +17,7 @@ object LoggingManager {
         val message = msg.message.apply { if (endsWith("\n")) substring(0, length - 1) }
         val cause = (Log.getStackTraceString(msg.cause)
             .apply { if (endsWith("\n")) substring(0, length - 1) })
-            .run { if (isNotBlank()) "\nCaused by: $this" else "" }
+            .run { if (isNotBlank()) "\nCaused by:\n$this" else "" }
 
         return "[$level][$time][$packageName]: $message$cause\n"
     }
@@ -52,6 +52,7 @@ object LoggingManager {
         val cause: Throwable? = null,
     )
 
+    @Suppress("unused")
     class Logger(private val module: XposedEntryInstance) {
         private val prefKeyFormat = SimpleDateFormat("yyyy-MM-dd_HH:mm:ss.SSS", Locale.getDefault())
 
