@@ -3,13 +3,15 @@ package me.iceice666.clipboardguard.ui.component
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons.Filled
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
@@ -24,30 +26,44 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.serialization.Serializable
+import me.iceice666.clipboardguard.LsposedServiceManager
 import me.iceice666.clipboardguard.R
 import me.iceice666.clipboardguard.ui.theme.ClipboardGuardTheme
-import kotlinx.serialization.Serializable
 
 @Serializable
-data class LoggingComponent(val logs: Map<String, String>) {
+object LoggingComponent : IDestinationComponent {
+
     @Composable
-    fun Show(modifier: Modifier = Modifier) =
-        LogContainer(logs = logs, modifier = modifier)
+    override fun Show(modifier: Modifier) {
+        val service = LsposedServiceManager.service
+        val logs = mapOf("Oops!" to "It seems like the Lsposed service is down.")
+
+
+        if (logs.isEmpty()) NothingToShow()
+        else LogContainer(logs = logs, modifier = modifier)
+    }
+
+    override val label: String = "logging"
+    override val icon: ImageVector = Icons.AutoMirrored.Filled.Assignment
+  //  override val route: String = this::class.java.name
 }
 
 
 @Composable
 fun LogContainer(
-    logs: Map<String, String>,
+    logs: Map<String, Any?>,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.padding(vertical = 4.dp)) {
         items(items = logs.toList().sortedByDescending { it.first }.reversed()) { (time, log) ->
-            LogCard(time = time, log = log)
+            LogCard(time = time, log = log.toString())
         }
     }
 }
@@ -102,7 +118,11 @@ fun LogContent(time: String, log: String, modifier: Modifier = Modifier) {
             if (cause.isNotBlank()) {
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
-                        imageVector = if (expanded) Filled.ExpandLess else Filled.ExpandMore,
+                        imageVector = if (expanded) {
+                            Icons.Filled.ExpandLess
+                        } else {
+                            Icons.Filled.ExpandMore
+                        },
                         contentDescription = if (expanded) {
                             stringResource(R.string.text_show_less)
                         } else {
@@ -116,6 +136,19 @@ fun LogContent(time: String, log: String, modifier: Modifier = Modifier) {
         }
 
 
+    }
+}
+
+@Composable
+fun NothingToShow() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(15.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(text = "Woo! Such empty.")
     }
 }
 
