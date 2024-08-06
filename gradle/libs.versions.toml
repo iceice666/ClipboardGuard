@@ -3,6 +3,7 @@ agp = "8.5.1"
 kotlin = "2.0.0"
 buildconfig = "5.3.5"
 coreKtx = "1.13.1"
+kotlinxSerializationJson = "1.7.1"
 lifecycleRuntimeKtx = "2.8.4"
 activityCompose = "1.9.1"
 composeBom = "2024.06.00"
@@ -12,6 +13,7 @@ jetbrainsKotlinJvm = "2.0.0"
 navigation = "2.8.0-beta06"
 
 [libraries]
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 libxposed-api = { group = "io.github.libxposed", name = "api", version.ref = "xposed-api" }
 libxposed-service = { group = "io.github.libxposed", name = "service", version.ref = "xposed-service" }
 

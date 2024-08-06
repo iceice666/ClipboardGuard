@@ -1,17 +1,23 @@
 package me.iceice666.clipboardguard.xposed
 
+import me.iceice666.clipboardguard.common.datakind.ActionKind
+import me.iceice666.clipboardguard.common.datakind.ContentType
+import me.iceice666.clipboardguard.common.datakind.FieldSelector
+import me.iceice666.clipboardguard.common.datakind.RuleSets
+
 
 object ConfigLoader {
 
 
-    private var ruleset: RuleSets = RuleSets
+    var ruleset: RuleSets = RuleSets()
 
     init {
 
-        ruleset.update(
-            RequestField("com.baidu.tieba", ActionKind.Read, ContentType.Text)
-        )
-        { HashSet<Regex>().apply { add(Regex(".*")) } }
+        listOf(ContentType.Text, ContentType.Uri, ContentType.Intent).forEach {
+            ruleset.update(
+                FieldSelector("com.baidu.tieba", ActionKind.Read, it)
+            ) { HashSet<Regex>().apply { add(Regex(".*")) } }
+        }
 
 
     }

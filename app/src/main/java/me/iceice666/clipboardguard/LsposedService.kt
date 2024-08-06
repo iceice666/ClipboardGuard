@@ -4,7 +4,7 @@ import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 
 @Suppress("unused")
-object LsposedServiceManager {
+object LsposedService {
     var service: XposedService? = null
 
     init {
