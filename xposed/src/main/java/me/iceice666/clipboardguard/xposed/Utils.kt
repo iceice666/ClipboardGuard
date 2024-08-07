@@ -1,4 +1,4 @@
-package me.iceice666.clipboardguard.common
+package me.iceice666.clipboardguard.xposed
 
 import java.io.File
 

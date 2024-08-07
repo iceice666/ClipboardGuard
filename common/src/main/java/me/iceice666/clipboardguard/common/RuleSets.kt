@@ -4,14 +4,17 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
+data class RegexSet( val data: Set<Regex> = emptySet()) : Parcelable
+
+@Parcelize
 data class RuleSets(
-    private val inner: HashMap<FieldSelector, HashSet<Regex>> = HashMap()
+    private val inner: Map<FieldSelector, RegexSet> = HashMap()
 ) : Parcelable {
-    fun request(field: FieldSelector): HashSet<Regex> {
-        return inner.getOrDefault(field, HashSet())
+    fun request(field: FieldSelector): RegexSet {
+        return inner.getOrDefault(field, RegexSet())
     }
 
-    fun update(field: FieldSelector, modifier: (HashSet<Regex>) -> HashSet<Regex>) {
+    fun update(field: FieldSelector, modifier: (RegexSet) -> RegexSet) {
         modifier(request(field))
     }
 }

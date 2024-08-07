@@ -1,4 +1,4 @@
-package me.iceice666.clipboardguard.xposed
+package me.iceice666.clipboardguard.xposed.service
 
 import android.content.ComponentName
 import android.content.Context
@@ -8,23 +8,29 @@ import android.os.IBinder
 import android.os.RemoteException
 import me.iceice666.clipboardguard.common.IManagerService
 
-class ServiceClient {
-    private var managerService: IManagerService? = null
+class ClipboardGuardServiceClient(private var context: Context) {
+    private var mService: IManagerService? = null
     private var isBound = false
+
+    var logger: Logger = Logger(context) { msg ->
+        manifestWithService { service ->
+            service.writeLog(msg)
+        }
+    }
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            managerService = IManagerService.Stub.asInterface(service)
+            mService = IManagerService.Stub.asInterface(service)
             isBound = true
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            managerService = null
+            mService = null
             isBound = false
         }
     }
 
-    fun bindService(context: Context) {
+    fun bindService() {
         val intent = Intent()
         intent.setComponent(
             ComponentName(
@@ -33,9 +39,10 @@ class ServiceClient {
             )
         )
         context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+
     }
 
-    fun unbindService(context: Context) {
+    fun unbindService() {
         if (isBound) {
             context.unbindService(connection)
             isBound = false
@@ -43,10 +50,8 @@ class ServiceClient {
     }
 
     @Throws(RemoteException::class)
-    fun manifestWithService(operation: (IManagerService) -> Unit) {
-        if (isBound) {
-            operation(managerService!!)
-        }
-    }
+    fun <T> manifestWithService(operation: (IManagerService) -> T) =
+        if (isBound) operation(mService!!) else null
+
 
 }
