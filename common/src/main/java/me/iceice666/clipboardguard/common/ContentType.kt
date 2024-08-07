@@ -1,6 +1,9 @@
-package me.iceice666.clipboardguard.common.datakind
+package me.iceice666.clipboardguard.common
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-enum class ContentType {
+@Parcelize
+enum class ContentType : Parcelable{
     Intent,
     Uri,
     Text;

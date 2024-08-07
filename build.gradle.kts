@@ -24,7 +24,7 @@ fun shellCmd(cmd: String, currentWorkingDir: File = file("./")): String {
 }
 
 val appVersion by extra("0.1.0")
-val applicationId by extra("me.iceice666.clipboardguard")
+val applicationId by extra("me.iceice666.clipboardguard.app")
 
 val minSdkVer by extra(24)
 val targetSdkVer by extra(34)

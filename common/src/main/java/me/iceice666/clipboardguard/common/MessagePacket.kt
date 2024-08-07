@@ -1,17 +1,20 @@
-package me.iceice666.clipboardguard.common.datakind
+package me.iceice666.clipboardguard.common
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class MessagePacket(
     val identifier: String,
     val level: Level,
     val message: String,
     val cause: Throwable? = null,
     val time: Calendar = Calendar.getInstance(),
-) {
+) : Parcelable{
     enum class Level {
         DEBUG,
         INFO,

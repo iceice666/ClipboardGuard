@@ -1,6 +1,10 @@
-package me.iceice666.clipboardguard.common.datakind
+package me.iceice666.clipboardguard.common
 
-enum class ActionKind {
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
+enum class ActionKind : Parcelable {
     Read,
     Write;
 

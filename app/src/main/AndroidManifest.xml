@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -15,16 +19,25 @@
         android:theme="@style/Theme.ClipboardGuard"
         tools:targetApi="tiramisu">
         <activity
-            android:name=".MainActivity"
+            android:name=".app.MainActivity"
             android:exported="true"
-            android:label="@string/title_activity_main"
             android:theme="@style/Theme.ClipboardGuard">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <service
+            android:name=".service.ManagerService"
+            android:exported="true"
+            android:permission="me.iceice666.clipboardguard.app.PERMISSION">
+            <intent-filter>
+                <action android:name="me.iceice666.clipboardguard.common.IManagerService" />
+            </intent-filter>
+        </service>
     </application>
+
 
 </manifest>
