@@ -8,12 +8,12 @@ import android.os.IBinder
 import android.os.RemoteException
 import me.iceice666.clipboardguard.common.IManagerService
 
-class ClipboardGuardServiceClient(private var context: Context) {
+class ClipboardGuardServiceClient() {
     private var mService: IManagerService? = null
     private var isBound = false
 
-    var logger: Logger = Logger(context) { msg ->
-        manifestWithService { service ->
+    fun getLogger(tag: String): Logger = Logger(tag) { msg ->
+        operateWithService { service ->
             service.writeLog(msg)
         }
     }
@@ -30,7 +30,7 @@ class ClipboardGuardServiceClient(private var context: Context) {
         }
     }
 
-    fun bindService() {
+    fun bindService(context: Context) {
         val intent = Intent()
         intent.setComponent(
             ComponentName(
@@ -42,7 +42,7 @@ class ClipboardGuardServiceClient(private var context: Context) {
 
     }
 
-    fun unbindService() {
+    fun unbindService(context: Context) {
         if (isBound) {
             context.unbindService(connection)
             isBound = false
@@ -50,8 +50,9 @@ class ClipboardGuardServiceClient(private var context: Context) {
     }
 
     @Throws(RemoteException::class)
-    fun <T> manifestWithService(operation: (IManagerService) -> T) =
-        if (isBound) operation(mService!!) else null
+    fun <ResultType> operateWithService(operation: (IManagerService) -> ResultType): ResultType? {
+        return if (isBound) operation(mService!!) else null
+    }
 
 
 }

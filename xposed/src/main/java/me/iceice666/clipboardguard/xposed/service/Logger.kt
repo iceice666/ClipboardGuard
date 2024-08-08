@@ -1,11 +1,10 @@
 package me.iceice666.clipboardguard.xposed.service
 
-import android.content.Context
 import me.iceice666.clipboardguard.common.MessagePacket
 
 @Suppress("unused")
 class Logger(
-    private var context: Context,
+    private var tag: String,
     private var redirectMessage: (MessagePacket) -> Unit = { _ -> }
 ) {
     fun debug(message: String) =
@@ -28,6 +27,6 @@ class Logger(
         message: String,
         cause: Throwable? = null,
     ) {
-        redirectMessage(MessagePacket(context.packageName, level, message, cause))
+        redirectMessage(MessagePacket(tag, level, message, cause))
     }
 }
