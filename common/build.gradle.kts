@@ -6,7 +6,6 @@ plugins {
 
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.buildconfig)
     id("kotlin-parcelize")
 
 }
@@ -17,22 +16,29 @@ dependencies {
 
 val applicationId: String by rootProject.extra
 
+fun String.toQuotedString(): String {
+    return "\"$this\""
+}
+
 android {
     namespace = "me.iceice666.clipboardguard.common"
 
     buildFeatures {
         buildConfig = true
         aidl = true
-    }
-
-    buildConfig {
-        packageName("me.iceice666.clipboardguard.common")
-        useJavaOutput()
-
-        buildConfigField("APP_NAME", rootProject.name)
-        buildConfigField("PACKAGE_ID", applicationId)
 
     }
+
+    defaultConfig {
+
+
+        buildConfigField("String", "APP_NAME", rootProject.name.toQuotedString())
+        buildConfigField("String", "PACKAGE_ID", applicationId.toQuotedString())
+
+
+    }
+
+
 
     packaging {
         resources {
