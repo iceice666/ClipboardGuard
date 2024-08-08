@@ -19,7 +19,7 @@
         android:theme="@style/Theme.ClipboardGuard"
         tools:targetApi="tiramisu">
         <activity
-            android:name=".app.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.ClipboardGuard">
             <intent-filter>
@@ -30,13 +30,16 @@
 
 
         <service
-            android:name=".service.ManagerService"
+            android:name=".service.ClipboardGuardService"
             android:exported="true"
             android:permission="me.iceice666.clipboardguard.app.PERMISSION">
             <intent-filter>
                 <action android:name="me.iceice666.clipboardguard.common.IManagerService" />
             </intent-filter>
         </service>
+
+
+
     </application>
 
 
