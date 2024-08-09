@@ -1,12 +1,8 @@
 package me.iceice666.clipboardguard.xposed
 
 
-import android.app.Activity
-import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Context
-import android.os.Bundle
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedInterface.AfterHookCallback
 import io.github.libxposed.api.XposedInterface.BeforeHookCallback
@@ -17,13 +13,14 @@ import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.annotations.AfterInvocation
 import io.github.libxposed.api.annotations.BeforeInvocation
 import io.github.libxposed.api.annotations.XposedHooker
-import me.iceice666.clipboardguard.common.ActionKind
 import me.iceice666.clipboardguard.common.BuildConfig.PACKAGE_ID
-import me.iceice666.clipboardguard.common.ContentType
-import me.iceice666.clipboardguard.common.FieldSelector
-import me.iceice666.clipboardguard.common.RegexSet
-import me.iceice666.clipboardguard.xposed.service.ClipboardGuardServiceClient
-import me.iceice666.clipboardguard.xposed.service.Logger
+import me.iceice666.clipboardguard.common.Logger
+import me.iceice666.clipboardguard.common.Manager
+import me.iceice666.clipboardguard.common.Manager.logCache
+import me.iceice666.clipboardguard.common.datakind.ActionKind
+import me.iceice666.clipboardguard.common.datakind.ContentType
+import me.iceice666.clipboardguard.common.datakind.FieldSelector
+import me.iceice666.clipboardguard.common.datakind.RegexSet
 
 
 private lateinit var module: XposedEntry
@@ -32,10 +29,9 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) :
     XposedModule(base, param) {
 
     private lateinit var packageName: String
-    private var mService: ClipboardGuardServiceClient = ClipboardGuardServiceClient()
     private lateinit var logger: Logger
 
-    private val whitelist = listOf(PACKAGE_ID, "com.google.android.webview")
+    private val whitelist = listOf(PACKAGE_ID)
 
     init {
         module = this
@@ -45,10 +41,19 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) :
     override fun onPackageLoaded(param: PackageLoadedParam) {
         super.onPackageLoaded(param)
 
-        if (whitelist.any { it == param.packageName } || !param.isFirstPackage) return
+        val packageName = param.packageName
 
-        packageName = param.packageName
-        logger = mService.getLogger(packageName)
+        if (
+            whitelist.any { it == packageName }
+            || packageName.startsWith("com.android")
+            || !param.isFirstPackage
+        ) return
+
+
+        this.packageName = packageName
+
+        module.log("Package loaded: $packageName")
+        logger = Manager.getLogger(packageName)
 
         hookMethods()
     }
@@ -91,11 +96,19 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) :
 
         val field = FieldSelector(packageName, actionKind, contentType)
 
-        val ruleset =
-            mService.operateWithService<RegexSet> { service -> service.requestRuleSets(field) }
-        val result = applyRules(content, ruleset ?: RegexSet())
+        val ruleset = Manager.ruleSets.request(field)
+        val result = applyRules(content, ruleset)
 
-        logger.info("($actionKind+$contentType):$result")
+
+        module.log("[$packageName]($actionKind+$contentType):$result")
+        logger.info("[$packageName]($actionKind+$contentType):$result")
+
+        module.log(logCache.count().toString())
+
+        if (result == ApplyResult.Matched) {
+            Manager.raiseCounter(field)
+        }
+
 
         return result == ApplyResult.Matched
     }
@@ -109,11 +122,6 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) :
         hook(
             ClipboardManager::class.java.getDeclaredMethod("getPrimaryClip"),
             GetPrimaryClipHooker::class.java
-        )
-
-        hook(
-            Application::class.java.getDeclaredMethod("attachBaseContext", Context::class.java),
-            ApplicationHooker::class.java
         )
 
     }
@@ -148,45 +156,17 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) :
         }
     }
 
-    @Suppress("Unused")
-    @XposedHooker
-    class ApplicationHooker : Hooker {
-        companion object {
-            @JvmStatic
-            @AfterInvocation
-            fun afterHookedMethod(callback: AfterHookCallback) {
-                val application = callback.thisObject as Application
-                application.registerActivityLifecycleCallbacks(
-                    object : Application.ActivityLifecycleCallbacks {
-                        override fun onActivityCreated(
-                            activity: Activity,
-                            savedInstanceState: Bundle?
-                        ) {
-                            module.mService.bindService(application.baseContext)
-                        }
-
-                        override fun onActivityStarted(activity: Activity) {}
-
-                        override fun onActivityResumed(activity: Activity) {}
-
-                        override fun onActivityPaused(activity: Activity) {}
-
-                        override fun onActivityStopped(activity: Activity) {}
-
-                        override fun onActivitySaveInstanceState(
-                            activity: Activity,
-                            outState: Bundle
-                        ) {
-                        }
-
-                        override fun onActivityDestroyed(activity: Activity) {
-                            module.mService.unbindService(application.baseContext)
-                        }
-                    }
-                )
-            }
-        }
-    }
+//    @Suppress("Unused")
+//    @XposedHooker
+//    class ApplicationHooker : Hooker {
+//        companion object {
+//            @JvmStatic
+//            @AfterInvocation
+//            fun afterHookedMethod(callback: AfterHookCallback) {
+//                context = callback.args[0] as Context
+//            }
+//        }
+//    }
 
 
 }

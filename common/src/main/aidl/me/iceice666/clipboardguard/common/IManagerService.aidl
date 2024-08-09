@@ -2,12 +2,14 @@
 package me.iceice666.clipboardguard.common;
 
 // Declare any non-default types here with import statements
-import me.iceice666.clipboardguard.common.FieldSelector;
-import me.iceice666.clipboardguard.common.RegexSet;
-import me.iceice666.clipboardguard.common.MessagePacket;
+import me.iceice666.clipboardguard.common.datakind.RuleSets;
+import me.iceice666.clipboardguard.common.datakind.MessagePacket;
 
 
 interface IManagerService {
-    void writeLog(in MessagePacket message);
-    RegexSet requestRuleSets(in FieldSelector field);
+    List<MessagePacket> getLogs();
+    void clearLogs();
+    int getLogCount();
+
+    void syncRuleSets(in RuleSets ruleSets);
 }

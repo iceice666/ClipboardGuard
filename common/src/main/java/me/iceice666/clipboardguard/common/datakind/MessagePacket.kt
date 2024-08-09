@@ -1,4 +1,4 @@
-package me.iceice666.clipboardguard.common
+package me.iceice666.clipboardguard.common.datakind
 
 import java.text.SimpleDateFormat
 import java.util.Calendar

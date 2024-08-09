@@ -1,6 +1,6 @@
-package me.iceice666.clipboardguard.xposed.service
+package me.iceice666.clipboardguard.common
 
-import me.iceice666.clipboardguard.common.MessagePacket
+import me.iceice666.clipboardguard.common.datakind.MessagePacket
 
 @Suppress("unused")
 class Logger(
