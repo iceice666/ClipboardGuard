@@ -1,4 +1,4 @@
-package me.iceice666.clipboardguard
+package me.iceice666.clipboardguard.app.service
 
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper

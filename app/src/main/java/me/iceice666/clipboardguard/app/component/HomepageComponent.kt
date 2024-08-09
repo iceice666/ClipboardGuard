@@ -1,9 +1,6 @@
-package me.iceice666.clipboardguard.ui.component
+package me.iceice666.clipboardguard.app.component
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.MaterialTheme
@@ -17,14 +14,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.libxposed.service.XposedService
 import kotlinx.serialization.Serializable
-import me.iceice666.clipboardguard.LsposedServiceManager
+import me.iceice666.clipboardguard.app.service.LsposedService
 
 
 @Serializable
 object HomepageComponent : IDestinationComponent {
     @Composable
-    override fun Show(modifier: Modifier) {
-        Homepage(modifier)
+    override fun Show( modifier: Modifier) {
+        Homepage( modifier)
     }
 
     override val label: String = "home"
@@ -32,11 +29,13 @@ object HomepageComponent : IDestinationComponent {
 
 }
 
-private val service: XposedService? = LsposedServiceManager.service
+private val xposedService: XposedService? = LsposedService.service
 
 @Preview
 @Composable
-fun Homepage(modifier: Modifier = Modifier) {
+fun Homepage(
+    modifier: Modifier = Modifier,
+) {
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -49,12 +48,13 @@ fun Homepage(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center
         ) {
 
-            service?.let { service ->
-                Text(text = "Binder acquired", style = MaterialTheme.typography.titleLarge)
+            xposedService?.let { service ->
+                Text(text = "Xposed binder acquired", style = MaterialTheme.typography.titleLarge)
                 Text(text = "API: ${service.apiVersion}")
                 Text(text = "${service.frameworkName} ${service.frameworkVersion} [code ${service.frameworkVersionCode}]")
 
-            } ?: Text(text = "Binder is null!")
+            } ?: Text(text = "Xposed binder is null!")
+
 
 
         }

@@ -14,24 +14,19 @@ import io.github.libxposed.api.annotations.AfterInvocation
 import io.github.libxposed.api.annotations.BeforeInvocation
 import io.github.libxposed.api.annotations.XposedHooker
 import me.iceice666.clipboardguard.common.BuildConfig.PACKAGE_ID
-import me.iceice666.clipboardguard.common.Logger
-import me.iceice666.clipboardguard.common.Manager
-import me.iceice666.clipboardguard.common.Manager.logCache
-import me.iceice666.clipboardguard.common.datakind.ActionKind
-import me.iceice666.clipboardguard.common.datakind.ContentType
-import me.iceice666.clipboardguard.common.datakind.FieldSelector
-import me.iceice666.clipboardguard.common.datakind.RegexSet
+import me.iceice666.clipboardguard.common.datakind.*
 
 
 private lateinit var module: XposedEntry
+private lateinit var packageName: String
+private lateinit var ruleset: RuleSets
+
+private val whitelist = listOf(PACKAGE_ID)
+
 
 class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) :
     XposedModule(base, param) {
 
-    private lateinit var packageName: String
-    private lateinit var logger: Logger
-
-    private val whitelist = listOf(PACKAGE_ID)
 
     init {
         module = this
@@ -41,19 +36,20 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) :
     override fun onPackageLoaded(param: PackageLoadedParam) {
         super.onPackageLoaded(param)
 
-        val packageName = param.packageName
+        val name = param.packageName
 
         if (
-            whitelist.any { it == packageName }
-            || packageName.startsWith("com.android")
+            whitelist.any { it == name }
+            || name.startsWith("com.android")
             || !param.isFirstPackage
         ) return
 
 
-        this.packageName = packageName
+        packageName = name
+        ruleset = RuleSets()
 
-        module.log("Package loaded: $packageName")
-        logger = Manager.getLogger(packageName)
+        module.log("Package loaded: $name")
+
 
         hookMethods()
     }
@@ -96,18 +92,11 @@ class XposedEntry(base: XposedInterface, param: ModuleLoadedParam) :
 
         val field = FieldSelector(packageName, actionKind, contentType)
 
-        val ruleset = Manager.ruleSets.request(field)
+        val ruleset = ruleset.request(field)
         val result = applyRules(content, ruleset)
 
 
         module.log("[$packageName]($actionKind+$contentType):$result")
-        logger.info("[$packageName]($actionKind+$contentType):$result")
-
-        module.log(logCache.count().toString())
-
-        if (result == ApplyResult.Matched) {
-            Manager.raiseCounter(field)
-        }
 
 
         return result == ApplyResult.Matched

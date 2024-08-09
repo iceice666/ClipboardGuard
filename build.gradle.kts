@@ -1,6 +1,9 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.BaseExtension
 import org.jetbrains.kotlin.konan.properties.Properties
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 // Reference: https://github.com/Dr-TSNG/Hide-My-Applist/blob/master/build.gradle.kts#L13-L103
 
@@ -46,6 +49,13 @@ tasks.register("clean", Delete::class) {
     delete(rootProject.layout.buildDirectory)
 }
 
+fun getCurrentTime(): String {
+    return SimpleDateFormat(
+        "yyyy-MM-dd_HH:mm:ss",
+        Locale.getDefault()
+    ).format(Calendar.getInstance().time)
+}
+
 fun Project.configureBaseExtension() {
 
     extensions.findByType<BaseExtension>()?.run {
@@ -58,7 +68,7 @@ fun Project.configureBaseExtension() {
 
             versionCode = gitCommitCount
             versionName = appVersion
-            versionNameSuffix = "-$gitCommitShortHash"
+            versionNameSuffix = "-$gitCommitShortHash+${getCurrentTime()}"
 
             consumerProguardFiles("proguard-rules.pro")
         }

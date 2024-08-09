@@ -1,4 +1,4 @@
-package me.iceice666.clipboardguard.ui.theme
+package me.iceice666.clipboardguard.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

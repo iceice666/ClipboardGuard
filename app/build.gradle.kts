@@ -6,12 +6,10 @@ plugins {
 }
 
 android {
-    namespace = "me.iceice666.clipboardguard"
+    namespace = "me.iceice666.clipboardguard.app"
 
     buildFeatures {
         buildConfig = true
-        viewBinding = true
-
         compose = true
 
     }
@@ -45,8 +43,6 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.runtime.ktx)
-
-
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

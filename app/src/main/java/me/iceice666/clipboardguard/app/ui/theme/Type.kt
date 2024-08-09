@@ -1,4 +1,4 @@
-package me.iceice666.clipboardguard.ui.theme
+package me.iceice666.clipboardguard.app.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

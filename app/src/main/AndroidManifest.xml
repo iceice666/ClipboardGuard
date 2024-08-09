@@ -29,16 +29,6 @@
         </activity>
 
 
-        <service
-            android:name=".service.ClipboardGuardService"
-            android:exported="true"
-            android:permission="me.iceice666.clipboardguard.app.PERMISSION">
-            <intent-filter>
-                <action android:name="me.iceice666.clipboardguard.common.IManagerService" />
-            </intent-filter>
-        </service>
-
-
 
     </application>
 

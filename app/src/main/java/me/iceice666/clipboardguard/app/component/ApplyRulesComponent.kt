@@ -1,4 +1,4 @@
-package me.iceice666.clipboardguard.ui.component
+package me.iceice666.clipboardguard.app.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.serialization.Serializable
 
 @Serializable
-object ApplyRulesComponent :IDestinationComponent {
+object ApplyRulesComponent : IDestinationComponent {
     @Composable
     override fun Show(modifier: Modifier) {
         TODO("Not yet implemented")
